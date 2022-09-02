@@ -10,6 +10,14 @@
 		"AzureBlobStorage1_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'AzureBlobStorage1'"
+		},
+		"ln_azur_key_vault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://KEY-VAULT-KJR-ADF.vault.azure.net/"
+		},
+		"ln_blob_storage_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "connstring-blobstorage-sa"
 		}
 	},
 	"variables": {
@@ -141,6 +149,41 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ln_azur_key_vault')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('ln_azur_key_vault_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ln_blob_storage')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "ln_azur_key_vault",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "[parameters('ln_blob_storage_properties_typeProperties_connectionString_secretName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ln_azur_key_vault')]"
+			]
 		}
 	]
 }
